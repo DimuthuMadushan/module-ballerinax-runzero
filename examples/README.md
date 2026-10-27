@@ -7,10 +7,10 @@ The `ballerinax/runzero` connector provides practical examples illustrating usag
 
 ## Prerequisites
 
-Create a `Config.toml` file in the example directory with a runZero API token, along with any other values the example documents:
+Create a `Config.toml` file in the example directory with a runZero organization API key (starts with `OT`), along with any other values the example documents. Both examples call organization operations, so an export token (`ET`) does not work:
 
 ```toml
-apiToken = "<API token>"
+apiToken = "<Organization API key>"
 ```
 
 ## Running an example

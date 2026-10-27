@@ -20,6 +20,8 @@ To use the runZero connector, you need a runZero account and an API token.
 
 2. Open the API keys page of your account or organization settings and create a new API key. Account keys start with `CT`, organization keys start with `OT` and export tokens start with `ET`.
 
+   > **Note:** Organization operations such as `getSites()` need an organization key (`OT`), which is scoped to one organization, or an account key (`CT`) or OAuth client, which can select the organization with the `_oid` query parameter. Export tokens (`ET`) work only with the export operations, and account operations need an account key or an OAuth client.
+
 3. Copy the generated token and store it securely. It is passed to the connector as a bearer token.
 
 4. Alternatively, create an API client in the account settings and use its client ID and client secret with the OAuth 2.0 client credentials grant. The token endpoint is `https://console.runzero.com/api/v1.0/account/api/token`.

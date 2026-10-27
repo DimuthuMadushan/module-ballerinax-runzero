@@ -128,6 +128,9 @@ service / on ep0 {
     # + assetId - UUID of the asset to remove
     # + return - empty response on success, or an error response
     resource function delete org/assets/[string assetId](@http:Query {name: "_oid"} string? oid) returns http:NoContent|ProblemUnauthorized|ProblemNotFound {
+        if assetId != ASSET_ID {
+            return notFound();
+        }
         return http:NO_CONTENT;
     }
 
@@ -137,6 +140,9 @@ service / on ep0 {
     # + siteId - UUID or name of the site to remove
     # + return - empty response on success, or an error response
     resource function delete org/sites/[string siteId](@http:Query {name: "_oid"} string? oid) returns http:NoContent|ProblemUnauthorized|ProblemNotFound {
+        if !isKnownSite(siteId) {
+            return notFound();
+        }
         return http:NO_CONTENT;
     }
 
@@ -233,6 +239,9 @@ service / on ep0 {
     # + agentId - UUID of the agent
     # + return - agent details, or an error response
     resource function get org/agents/[string agentId](@http:Query {name: "_oid"} string? oid) returns Agent|ProblemUnauthorized|ProblemNotFound {
+        if agentId != EXPLORER_ID {
+            return notFound();
+        }
         return mockExplorer;
     }
 
@@ -252,6 +261,9 @@ service / on ep0 {
     # + assetId - UUID of the asset to retrieve
     # + return - asset details, or an error response
     resource function get org/assets/[string assetId](@http:Query {name: "_oid"} string? oid) returns Asset|ProblemUnauthorized|ProblemNotFound {
+        if assetId != ASSET_ID {
+            return notFound();
+        }
         return mockAsset;
     }
 
@@ -269,6 +281,9 @@ service / on ep0 {
     # + explorerId - UUID of the explorer
     # + return - explorer details, or an error response
     resource function get org/explorers/[string explorerId](@http:Query {name: "_oid"} string? oid) returns Explorer|ProblemUnauthorized|ProblemNotFound {
+        if explorerId != EXPLORER_ID {
+            return notFound();
+        }
         return mockExplorer;
     }
 
@@ -306,6 +321,9 @@ service / on ep0 {
     # + serviceId - UUID of the service to retrieve
     # + return - service details, or an error response
     resource function get org/services/[string serviceId](@http:Query {name: "_oid"} string? oid) returns Service|ProblemUnauthorized|ProblemNotFound {
+        if serviceId != SERVICE_ID {
+            return notFound();
+        }
         return mockService;
     }
 
@@ -323,6 +341,9 @@ service / on ep0 {
     # + siteId - UUID or name of the site to retrieve
     # + return - site details, or an error response
     resource function get org/sites/[string siteId](@http:Query {name: "_oid"} string? oid) returns Site|ProblemUnauthorized|ProblemNotFound {
+        if !isKnownSite(siteId) {
+            return notFound();
+        }
         return mockSite;
     }
 
@@ -341,7 +362,10 @@ service / on ep0 {
     # + oid - The current Organization
     # + taskId - UUID of the task to retrieve
     # + return - task details, or an error response
-    resource function get org/tasks/[string taskId](@http:Query {name: "_oid"} string? oid) returns Task|ProblemUnauthorized {
+    resource function get org/tasks/[string taskId](@http:Query {name: "_oid"} string? oid) returns Task|ProblemUnauthorized|ProblemNotFound {
+        if taskId != TASK_ID {
+            return notFound();
+        }
         return mockTask;
     }
 
@@ -352,10 +376,19 @@ service / on ep0 {
     # + payload - site object
     # + return - updated site details, or an error response
     resource function patch org/sites/[string siteId](@http:Query {name: "_oid"} string? oid, @http:Payload SiteOptions payload) returns Site|ProblemUnauthorized|ProblemNotFound {
+        if !isKnownSite(siteId) {
+            return notFound();
+        }
         Site updated = mockSite.clone();
         updated.name = payload.name;
-        updated.description = payload.description;
-        updated.scope = payload.scope;
+        string? description = payload.description;
+        if description is string {
+            updated.description = description;
+        }
+        string? scope = payload.scope;
+        if scope is string {
+            updated.scope = scope;
+        }
         return updated;
     }
 
@@ -401,6 +434,10 @@ service / on ep0 {
         return created;
     }
 }
+
+function isKnownSite(string siteId) returns boolean => siteId == SITE_ID || siteId == mockSite.name;
+
+function notFound() returns ProblemNotFound => {body: {status: 404, title: "Not Found", detail: "No resource exists with the given ID"}};
 
 // Service-mode response types. `bal openapi --mode client` collapses 4XX/5XX
 // to `error` and never emits these, so they are defined here for the mock only.

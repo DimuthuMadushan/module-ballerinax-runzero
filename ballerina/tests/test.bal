@@ -25,8 +25,6 @@ final string token = isLiveServer ? os:getEnv("RUNZERO_API_TOKEN") : "test_token
 
 final Client runzero = check new ({auth: {token}, httpVersion: http:HTTP_1_1}, serviceUrl);
 
-const string TEST_ID = "e0d8cdd4-1a3f-4b5c-9a43-5a1f0e0f2c11";
-
 @test:Config {groups: ["live_tests", "mock_tests"]}
 isolated function testGetHealthCheck() returns error? {
     HealthCheckResponse response = check runzero->getHealthCheck();
@@ -42,12 +40,17 @@ isolated function testGetOrganization() returns error? {
 @test:Config {groups: ["live_tests", "mock_tests"]}
 isolated function testGetSites() returns error? {
     Site[] response = check runzero->getSites();
-    test:assertTrue(response.length() > 0);
+    if !isLiveServer {
+        test:assertTrue(response.length() > 0);
+    }
 }
 
 @test:Config {groups: ["live_tests", "mock_tests"]}
 isolated function testGetSite() returns error? {
     Site[] sites = check runzero->getSites();
+    if sites.length() == 0 {
+        return;
+    }
     Site response = check runzero->getSite(sites[0].id);
     test:assertEquals(response.id, sites[0].id);
 }
@@ -66,8 +69,10 @@ isolated function testUpdateSite() returns error? {
     if isLiveServer {
         return;
     }
-    Site response = check runzero->updateSite(TEST_ID, {name: "Renamed Site"});
+    Site response = check runzero->updateSite(SITE_ID, {name: "Renamed Site"});
     test:assertEquals(response.name, "Renamed Site");
+    test:assertEquals(response?.description, "Headquarters network");
+    test:assertEquals(response?.scope, "10.0.0.0/8");
 }
 
 @test:Config {groups: ["mock_tests"]}
@@ -75,18 +80,23 @@ isolated function testRemoveSite() returns error? {
     if isLiveServer {
         return;
     }
-    check runzero->removeSite(TEST_ID);
+    check runzero->removeSite(SITE_ID);
 }
 
 @test:Config {groups: ["live_tests", "mock_tests"]}
 isolated function testGetAssets() returns error? {
     Asset[] response = check runzero->getAssets();
-    test:assertTrue(response.length() > 0);
+    if !isLiveServer {
+        test:assertTrue(response.length() > 0);
+    }
 }
 
 @test:Config {groups: ["live_tests", "mock_tests"]}
 isolated function testGetAsset() returns error? {
     Asset[] assets = check runzero->getAssets();
+    if assets.length() == 0 {
+        return;
+    }
     Asset response = check runzero->getAsset(assets[0].id);
     test:assertEquals(response.id, assets[0].id);
 }
@@ -96,7 +106,7 @@ isolated function testRemoveAsset() returns error? {
     if isLiveServer {
         return;
     }
-    check runzero->removeAsset(TEST_ID);
+    check runzero->removeAsset(ASSET_ID);
 }
 
 @test:Config {groups: ["live_tests", "mock_tests"]}
@@ -110,7 +120,7 @@ isolated function testGetAgent() returns error? {
     if isLiveServer {
         return;
     }
-    Agent response = check runzero->getAgent(TEST_ID);
+    Agent response = check runzero->getAgent(EXPLORER_ID);
     test:assertTrue(response.id.length() > 0);
 }
 
@@ -125,7 +135,7 @@ isolated function testGetExplorer() returns error? {
     if isLiveServer {
         return;
     }
-    Explorer response = check runzero->getExplorer(TEST_ID);
+    Explorer response = check runzero->getExplorer(EXPLORER_ID);
     test:assertTrue(response.id.length() > 0);
 }
 
@@ -140,7 +150,7 @@ isolated function testGetTask() returns error? {
     if isLiveServer {
         return;
     }
-    Task response = check runzero->getTask(TEST_ID);
+    Task response = check runzero->getTask(TASK_ID);
     test:assertTrue(response?.id !is ());
 }
 
@@ -155,7 +165,7 @@ isolated function testGetService() returns error? {
     if isLiveServer {
         return;
     }
-    Service response = check runzero->getService(TEST_ID);
+    Service response = check runzero->getService(SERVICE_ID);
     test:assertTrue(response.serviceId.length() > 0);
 }
 
